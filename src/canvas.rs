@@ -1,3 +1,5 @@
+use std::{fs::File, io::Write};
+
 use crate::color::Color;
 
 pub struct Canvas {
@@ -21,6 +23,22 @@ impl Canvas {
 
     pub fn write(&mut self, x: usize, y: usize, color: Color) {
         self.pixels[y * self.width + x] = color
+    }
+
+    pub fn to_ppm(&self) -> String {
+        let pixels = self
+            .pixels
+            .iter()
+            .map(Color::to_ppm)
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        format!("P3\n{} {}\n255\n{pixels}\n", self.width, self.height)
+    }
+
+    pub fn save(&self, filename: &str) {
+        let mut image = File::create(filename).unwrap();
+        writeln!(&mut image, "{}", self.to_ppm()).unwrap();
     }
 }
 

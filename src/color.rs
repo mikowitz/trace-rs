@@ -11,6 +11,24 @@ impl Color {
     pub fn black() -> Self {
         Self(0., 0., 0.)
     }
+
+    pub fn to_ppm(&self) -> String {
+        let r = clamp(self.0 * 255.999).ceil() as u32;
+        let g = clamp(self.1 * 255.999).ceil() as u32;
+        let b = clamp(self.2 * 255.999).ceil() as u32;
+
+        format!("{r} {g} {b}")
+    }
+}
+
+fn clamp(n: f32) -> f32 {
+    if n > 255. {
+        return 255.;
+    }
+    if n < 0. {
+        return 0.;
+    }
+    n
 }
 
 impl Add<Color> for Color {
@@ -81,5 +99,16 @@ mod tests {
         let c2 = Color(0.9, 1., 0.1);
 
         assert!((c1 * c2).approximate(Color(0.9, 0.2, 0.04)));
+    }
+
+    #[test]
+    fn to_ppm() {
+        let c1 = Color::new(1.5, 0., 0.);
+        let c2 = Color::new(0., 0.5, 0.);
+        let c3 = Color::new(-0.5, 0., 1.);
+
+        assert_eq!(c1.to_ppm(), "255 0 0");
+        assert_eq!(c2.to_ppm(), "0 128 0");
+        assert_eq!(c3.to_ppm(), "0 0 255");
     }
 }
