@@ -24,6 +24,17 @@ impl Matrix {
     pub fn write(&mut self, row: usize, column: usize, value: f32) {
         self.0[row * 4 + column] = value;
     }
+
+    pub fn transpose(&self) -> Self {
+        let mut m = Self([0.; 16]);
+
+        for row in 0..4 {
+            for col in 0..4 {
+                m.write(col, row, self.at(row, col));
+            }
+        }
+        m
+    }
 }
 
 impl Mul<Matrix> for Matrix {
@@ -72,10 +83,7 @@ impl Matrix3x3 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        test::approx::Approx,
-        tuple::{point, Tuple4},
-    };
+    use crate::{test::approx::Approx, tuple::point};
 
     impl Approx for Matrix {
         fn approximate(&self, rhs: Self) -> bool {
@@ -178,5 +186,23 @@ mod tests {
             1., 2., 3., 4., 2., 4., 4., 2., 8., 6., 4., 1., 0., 0., 0., 1.,
         ]);
         assert_eq!(a * Matrix::identity(), a);
+    }
+
+    #[test]
+    fn transposing_a_matrix() {
+        let a = Matrix([
+            0., 9., 3., 0., 9., 8., 0., 8., 1., 8., 5., 3., 0., 0., 5., 8.,
+        ]);
+
+        let b = Matrix([
+            0., 9., 1., 0., 9., 8., 8., 0., 3., 0., 5., 5., 0., 8., 3., 8.,
+        ]);
+
+        assert_eq!(a.transpose(), b);
+    }
+
+    #[test]
+    fn transposing_the_identity_matrix() {
+        assert_eq!(Matrix::identity().transpose(), Matrix::identity());
     }
 }
