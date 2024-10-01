@@ -222,3 +222,40 @@ mod shearing_tests {
         assert_eq!(transform * p, point(2., 3., 7.));
     }
 }
+
+#[cfg(test)]
+mod chaining_tests {
+    use super::*;
+    use crate::test::approx::Approx;
+    use crate::tuple::point;
+    use std::f32::consts::PI;
+
+    #[test]
+    fn transformations_are_applied_in_sequence() {
+        let p = point(1., 0., 1.);
+        let a = rotation_x(PI / 2.);
+        let b = scaling(5., 5., 5.);
+        let c = translation(10., 5., 7.);
+
+        let p2 = a * p;
+        assert!(p2.approximate(point(1., -1., 0.)));
+
+        let p3 = b * p2;
+        assert!(p3.approximate(point(5., -5., 0.)));
+
+        let p4 = c * p3;
+        assert!(p4.approximate(point(15., 0., 7.)));
+    }
+
+    #[test]
+    fn transformations_are_chained_in_reverse_order() {
+        let p = point(1., 0., 1.);
+        let a = rotation_x(PI / 2.);
+        let b = scaling(5., 5., 5.);
+        let c = translation(10., 5., 7.);
+
+        let t = c * b * a;
+
+        assert!((t * p).approximate(point(15., 0., 7.)));
+    }
+}
