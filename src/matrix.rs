@@ -112,8 +112,8 @@ impl Mul<Tuple4> for Matrix {
     type Output = Tuple4;
     fn mul(self, rhs: Tuple4) -> Self::Output {
         let mut t = [0.; 4];
-        for row in 0..4 {
-            t[row] = self.at(row, 0) * rhs.0
+        for (row, v) in t.iter_mut().enumerate() {
+            *v = self.at(row, 0) * rhs.0
                 + self.at(row, 1) * rhs.1
                 + self.at(row, 2) * rhs.2
                 + self.at(row, 3) * rhs.3;
