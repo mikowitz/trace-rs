@@ -1,7 +1,7 @@
 use crate::tuple::Tuple4;
 use std::ops::Mul;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Matrix([f32; 16]);
 pub struct Matrix3x3([f32; 9]);
 pub struct Matrix2x2([f32; 4]);
@@ -9,6 +9,12 @@ pub struct Matrix2x2([f32; 4]);
 impl Matrix {
     pub fn new(contents: [f32; 16]) -> Self {
         Matrix(contents)
+    }
+
+    pub fn identity() -> Self {
+        Self([
+            1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.,
+        ])
     }
 
     pub fn at(&self, row: usize, column: usize) -> f32 {
@@ -164,5 +170,13 @@ mod tests {
         let b = point(1., 2., 3.);
 
         assert_eq!(a * b, point(18., 24., 33.));
+    }
+
+    #[test]
+    fn multiplying_by_the_identity_matrix() {
+        let a = Matrix([
+            1., 2., 3., 4., 2., 4., 4., 2., 8., 6., 4., 1., 0., 0., 0., 1.,
+        ]);
+        assert_eq!(a * Matrix::identity(), a);
     }
 }
