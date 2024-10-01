@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Tuple4(f32, f32, f32, f32);
+pub struct Tuple4(pub f32, pub f32, pub f32, pub f32);
 
 pub type Vector = Tuple4;
 pub type Point = Tuple4;
