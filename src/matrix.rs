@@ -2,7 +2,7 @@ use crate::tuple::Tuple4;
 use std::ops::Mul;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Matrix([f32; 16]);
+pub struct Matrix(pub [f32; 16]);
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Matrix3x3([f32; 9]);
 #[derive(Clone, Copy, Debug, PartialEq)]
