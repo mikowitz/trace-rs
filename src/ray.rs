@@ -3,10 +3,24 @@ use crate::{
     tuple::{Point, Vector},
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Intersection {
     pub t: f32,
     pub object: Sphere,
+}
+
+pub struct Intersections(Vec<Intersection>);
+
+impl Intersections {
+    pub fn hit(&self) -> Option<Intersection> {
+        let mut xs = self.0.clone();
+        xs.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+        let index = xs.iter().position(|&i| i.t >= 0.0);
+        if let Some(idx) = index {
+            return Some(xs[idx]);
+        }
+        None
+    }
 }
 
 pub struct Ray {
@@ -129,5 +143,47 @@ mod tests {
         assert_eq!(xs[0].t, -6.0);
         assert_eq!(xs[0].object, s);
         assert_eq!(xs[1].object, s);
+    }
+
+    #[test]
+    fn the_hit_when_all_intersections_have_positive_t() {
+        let s = sphere();
+        let i1 = Intersection { t: 1., object: s };
+        let i2 = Intersection { t: 2., object: s };
+
+        let xs = Intersections(vec![i2, i1]);
+        assert_eq!(xs.hit(), Some(i1));
+    }
+
+    #[test]
+    fn the_hit_when_some_intersections_have_negative_t() {
+        let s = sphere();
+        let i1 = Intersection { t: -1., object: s };
+        let i2 = Intersection { t: 1., object: s };
+
+        let xs = Intersections(vec![i2, i1]);
+        assert_eq!(xs.hit(), Some(i2));
+    }
+
+    #[test]
+    fn the_hit_when_all_intersections_have_negative_t() {
+        let s = sphere();
+        let i1 = Intersection { t: -2., object: s };
+        let i2 = Intersection { t: -1., object: s };
+
+        let xs = Intersections(vec![i2, i1]);
+        assert_eq!(xs.hit(), None);
+    }
+
+    #[test]
+    fn the_hit_is_always_the_lowest_nonnegative_intersection() {
+        let s = sphere();
+        let i1 = Intersection { t: 5., object: s };
+        let i2 = Intersection { t: 7., object: s };
+        let i3 = Intersection { t: -3., object: s };
+        let i4 = Intersection { t: 2., object: s };
+
+        let xs = Intersections(vec![i1, i2, i3, i4]);
+        assert_eq!(xs.hit(), Some(i4));
     }
 }
