@@ -1,4 +1,7 @@
+use std::ops::Mul;
+
 use crate::{
+    matrix::Matrix,
     sphere::Sphere,
     tuple::{Point, Vector},
 };
@@ -23,6 +26,7 @@ impl Intersections {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector,
@@ -37,11 +41,12 @@ impl Ray {
         self.origin + self.direction * t
     }
 
-    pub fn intersects(&self, sphere: Sphere) -> Vec<Intersection> {
-        let sphere_to_ray = self.origin - sphere.center;
+    pub fn intersect(&self, sphere: Sphere) -> Vec<Intersection> {
+        let ray2 = *self * sphere.transform.inverse();
+        let sphere_to_ray = ray2.origin - sphere.center;
 
-        let a = self.direction.dot(self.direction);
-        let b = 2.0 * self.direction.dot(sphere_to_ray);
+        let a = ray2.direction.dot(ray2.direction);
+        let b = 2.0 * ray2.direction.dot(sphere_to_ray);
         let c = sphere_to_ray.dot(sphere_to_ray) - sphere.radius * sphere.radius;
 
         let discriminant = b * b - 4.0 * a * c;
@@ -63,9 +68,17 @@ impl Ray {
     }
 }
 
+impl Mul<Matrix> for Ray {
+    type Output = Ray;
+    fn mul(self, rhs: Matrix) -> Self::Output {
+        Ray::new(rhs * self.origin, rhs * self.direction)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
+        matrix_transformations::{scaling, translation},
         sphere::Sphere,
         tuple::{point, vector},
     };
@@ -93,7 +106,7 @@ mod tests {
     fn a_ray_intersects_a_sphere_at_two_points() {
         let ray = Ray::new(point(0., 0., -5.), vector(0., 0., 1.));
         let s = sphere();
-        let xs = ray.intersects(s);
+        let xs = ray.intersect(s);
 
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0].t, 4.0);
@@ -106,7 +119,7 @@ mod tests {
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let ray = Ray::new(point(0., 1., -5.), vector(0., 0., 1.));
         let s = sphere();
-        let xs = ray.intersects(s);
+        let xs = ray.intersect(s);
 
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0].t, 5.0);
@@ -117,7 +130,7 @@ mod tests {
     fn a_ray_misses_a_sphere() {
         let ray = Ray::new(point(0., 2., -5.), vector(0., 0., 1.));
         let s = sphere();
-        let xs = ray.intersects(s);
+        let xs = ray.intersect(s);
 
         assert_eq!(xs.len(), 0);
     }
@@ -126,7 +139,7 @@ mod tests {
     fn a_ray_originates_inside_a_sphere() {
         let ray = Ray::new(point(0., 0., 0.), vector(0., 0., 1.));
         let s = sphere();
-        let xs = ray.intersects(s);
+        let xs = ray.intersect(s);
 
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0].t, -1.0);
@@ -137,7 +150,7 @@ mod tests {
     fn a_sphere_is_behind_a_ray() {
         let ray = Ray::new(point(0., 0., 5.), vector(0., 0., 1.));
         let s = sphere();
-        let xs = ray.intersects(s);
+        let xs = ray.intersect(s);
 
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0].t, -6.0);
@@ -185,5 +198,47 @@ mod tests {
 
         let xs = Intersections(vec![i1, i2, i3, i4]);
         assert_eq!(xs.hit(), Some(i4));
+    }
+
+    #[test]
+    fn intersecting_a_scaled_sphere_with_a_ray() {
+        let r = Ray::new(point(0., 0., -5.), vector(0., 0., 1.));
+        let mut s = sphere();
+        s.set_transform(scaling(2., 2., 2.));
+
+        let xs = r.intersect(s);
+
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0].t, 3.);
+        assert_eq!(xs[1].t, 7.);
+    }
+
+    #[test]
+    fn intersecting_a_translated_sphere_with_a_rlay() {
+        let r = Ray::new(point(0., 0., -5.), vector(0., 0., 1.));
+        let mut s = sphere();
+        s.set_transform(translation(5., 0., 0.));
+
+        let xs = r.intersect(s);
+
+        assert_eq!(xs.len(), 0);
+    }
+
+    #[test]
+    fn translating_a_ray() {
+        let ray = Ray::new(point(1., 2., 3.), vector(0., 1., 0.));
+        let m = translation(3., 4., 5.);
+        let r2 = ray * m;
+        assert_eq!(r2.origin, point(4., 6., 8.));
+        assert_eq!(r2.direction, vector(0., 1., 0.));
+    }
+
+    #[test]
+    fn scaling_a_ray() {
+        let ray = Ray::new(point(1., 2., 3.), vector(0., 1., 0.));
+        let m = scaling(2., 3., 4.);
+        let r2 = ray * m;
+        assert_eq!(r2.origin, point(2., 6., 12.));
+        assert_eq!(r2.direction, vector(0., 3., 0.));
     }
 }
