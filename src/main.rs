@@ -11,7 +11,7 @@ use trace_rs::{
 
 fn main() {
     let aspect_ratio = 16. / 9.;
-    let image_width = 256;
+    let image_width = 400;
     let mut image_height = (image_width as f32 / aspect_ratio) as i32;
     if image_height < 1 {
         image_height = 1;
@@ -53,7 +53,20 @@ fn main() {
 }
 
 fn ray_color(ray: &Ray) -> Color {
+    if hit_sphere(Point3::new(0., 0., 1.), 0.5, ray) {
+        return Color::new(0.4, 0., 1.0);
+    }
     let unit_direction = ray.direction.unit_vector();
     let a = 0.5 * (unit_direction[1] + 1.0);
     Color::white() * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
+}
+
+fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> bool {
+    let oc = center - ray.origin;
+    let a = ray.direction.dot(&ray.direction);
+    let b = -2.0 * ray.direction.dot(&oc);
+    let c = oc.dot(&oc) - radius * radius;
+    let discriminant = b * b - 4. * a * c;
+
+    discriminant >= 0.
 }
