@@ -1,7 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
 
 #[derive(Clone, Copy, Debug)]
-pub struct Vec3(pub [f32; 3]);
+pub struct Vec3([f32; 3]);
 pub type Point3 = Vec3;
 
 impl Vec3 {
