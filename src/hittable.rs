@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use crate::{
+    material::Material,
     ray::Ray,
     vec3::{Point3, Vec3},
 };
@@ -11,10 +12,11 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
+    pub material: Material,
 }
 
 impl HitRecord {
-    pub fn new(p: Point3, t: f32, outward_normal: &Vec3, ray: &Ray) -> Self {
+    pub fn new(p: Point3, t: f32, outward_normal: &Vec3, ray: &Ray, material: Material) -> Self {
         let front_face = ray.direction.dot(outward_normal) < 0.;
         let normal = if front_face {
             *outward_normal
@@ -26,6 +28,7 @@ impl HitRecord {
             normal,
             t,
             front_face,
+            material,
         }
     }
 }

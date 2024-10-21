@@ -1,5 +1,6 @@
 use crate::{
     hittable::{HitRecord, Hittable},
+    material::Material,
     ray::Ray,
     vec3::Point3,
 };
@@ -9,11 +10,16 @@ use std::ops::Range;
 pub struct Sphere {
     center: Point3,
     radius: f32,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point3, radius: f32, material: Material) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -44,6 +50,6 @@ impl Hittable for Sphere {
         let p = ray.at(t);
         let normal = (p - self.center) / self.radius;
 
-        Some(HitRecord::new(p, t, &normal, ray))
+        Some(HitRecord::new(p, t, &normal, ray, self.material))
     }
 }

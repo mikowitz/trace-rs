@@ -1,9 +1,15 @@
-use trace_rs::{camera::Camera, sphere::Sphere, vec3::Point3};
+use trace_rs::{camera::Camera, color::Color, material::Material, sphere::Sphere, vec3::Point3};
 
 fn main() {
+    let ground_material = Material::Lambertian(Color::new(0.8, 0.8, 0.0));
+    let center_material = Material::Lambertian(Color::new(0.1, 0.2, 0.5));
+    let left_material = Material::Metal(Color::new(0.8, 0.8, 0.8), 0.3);
+    let right_material = Material::Metal(Color::new(0.8, 0.6, 0.2), 1.0);
     let world = vec![
-        Sphere::new(Point3::new(0., 0., -1.), 0.5),
-        Sphere::new(Point3::new(0., -100.5, -1.), 100.),
+        Sphere::new(Point3::new(0., -100.5, -1.), 100., ground_material),
+        Sphere::new(Point3::new(0., 0., -1.2), 0.5, center_material),
+        Sphere::new(Point3::new(-1., 0., -1.), 0.5, left_material),
+        Sphere::new(Point3::new(1., 0., -1.), 0.5, right_material),
     ];
 
     let mut camera = Camera::default();
