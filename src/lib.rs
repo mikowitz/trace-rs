@@ -1,3 +1,6 @@
+#![allow(mixed_script_confusables)]
+
+pub mod camera;
 pub mod color;
 pub mod hittable;
 pub mod ray;
