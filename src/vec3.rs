@@ -1,4 +1,5 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
+use rand::*;
+use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3([f32; 3]);
@@ -7,6 +8,30 @@ pub type Point3 = Vec3;
 impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self([x, y, z])
+    }
+
+    pub fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        Self([rng.gen(), rng.gen(), rng.gen()])
+    }
+
+    pub fn random_in(range: Range<f32>) -> Self {
+        let mut rng = rand::thread_rng();
+        Self([
+            rng.gen_range(range.clone()),
+            rng.gen_range(range.clone()),
+            rng.gen_range(range.clone()),
+        ])
+    }
+
+    pub fn random_unit_vector() -> Self {
+        loop {
+            let p = Vec3::random_in(-1.0..1.0);
+            let lensq = p.length_squared();
+            if 1e-160 < lensq && lensq <= 1.0 {
+                break p.unit_vector();
+            }
+        }
     }
 
     pub fn length_squared(&self) -> f32 {
