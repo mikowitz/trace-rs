@@ -13,9 +13,9 @@ impl Color {
     }
 
     pub fn to_ppm(&self) -> String {
-        let r = self[0];
-        let g = self[1];
-        let b = self[2];
+        let r = linear_to_gamma(self[0]);
+        let g = linear_to_gamma(self[1]);
+        let b = linear_to_gamma(self[2]);
 
         let intensity = 0.000..0.999;
         let ir = (256. * clamp(&intensity, r)) as i32;
@@ -34,4 +34,11 @@ fn clamp(interval: &Range<f32>, n: f32) -> f32 {
         return interval.end;
     }
     n
+}
+
+fn linear_to_gamma(linear: f32) -> f32 {
+    if linear > 0. {
+        return linear.sqrt();
+    }
+    0.
 }

@@ -14,6 +14,7 @@ pub struct Camera {
     pub aspect_ratio: f32,
     pub image_width: i32,
     pub samples_per_pixel: i32,
+    pub max_depth: i32,
     image_height: i32,
     pixel_samples_scale: f32,
     pixel00_loc: Point3,
@@ -33,7 +34,7 @@ impl Camera {
             .progress_count(self.image_width as u64 * self.image_height as u64)
             .map(|(y, x)| {
                 let pixel_color = (0..self.samples_per_pixel).fold(Color::black(), |color, _| {
-                    color + Camera::ray_color(&self.get_ray(x, y), world)
+                    color + Camera::ray_color(&self.get_ray(x, y), world, self.max_depth)
                 }) * self.pixel_samples_scale;
                 pixel_color.to_ppm()
             })
@@ -86,12 +87,16 @@ impl Camera {
         Ray::new(self.center, direction)
     }
 
-    fn ray_color<T>(ray: &Ray, world: &T) -> Color
+    fn ray_color<T>(ray: &Ray, world: &T, depth: i32) -> Color
     where
         T: Hittable + 'static,
     {
-        if let Some(hit_rec) = world.hit(ray, 0.0..f32::INFINITY) {
-            return (hit_rec.normal + Color::white()) * 0.5;
+        if depth <= 0 {
+            return Color::black();
+        }
+        if let Some(hit_rec) = world.hit(ray, 0.001..f32::INFINITY) {
+            let direction = hit_rec.normal + Vec3::random_unit_vector();
+            return Camera::ray_color(&Ray::new(hit_rec.p, direction), world, depth - 1) * 0.5;
         }
         let unit_direction = ray.direction.unit_vector();
         let a = 0.5 * (unit_direction[1] + 1.0);
@@ -104,13 +109,14 @@ impl Default for Camera {
         Camera {
             aspect_ratio: 1.0,
             image_width: 100,
+            samples_per_pixel: 10,
+            max_depth: 10,
             image_height: 100,
+            pixel_samples_scale: 0.1,
             pixel00_loc: Point3::new(0., 0., 0.),
             center: Point3::new(0., 0., 0.),
             pixel_δ_u: Vec3::new(1., 0., 0.),
             pixel_δ_v: Vec3::new(0., -1., 0.),
-            samples_per_pixel: 10,
-            pixel_samples_scale: 0.1,
         }
     }
 }
