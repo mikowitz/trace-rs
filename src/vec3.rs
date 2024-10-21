@@ -42,6 +42,11 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
+    pub fn is_near_zero(&self) -> bool {
+        let s = 1e-8;
+        self[0].abs() < s && self[1].abs() < s && self[2].abs() < s
+    }
+
     pub fn dot(&self, rhs: &Self) -> f32 {
         self[0] * rhs[0] + self[1] * rhs[1] + self[2] * rhs[2]
     }
@@ -52,6 +57,10 @@ impl Vec3 {
             self[2] * rhs[0] - self[0] * rhs[2],
             self[0] * rhs[1] - self[1] * rhs[0],
         ])
+    }
+
+    pub fn reflect(&self, normal: &Self) -> Self {
+        *self - *normal * 2.0 * self.dot(normal)
     }
 
     pub fn unit_vector(&self) -> Self {

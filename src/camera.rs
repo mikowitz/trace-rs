@@ -95,8 +95,11 @@ impl Camera {
             return Color::black();
         }
         if let Some(hit_rec) = world.hit(ray, 0.001..f32::INFINITY) {
-            let direction = hit_rec.normal + Vec3::random_unit_vector();
-            return Camera::ray_color(&Ray::new(hit_rec.p, direction), world, depth - 1) * 0.5;
+            if let Some(scatter) = hit_rec.material.scatter(ray, &hit_rec) {
+                return Camera::ray_color(&scatter.scattered, world, depth - 1)
+                    * scatter.attenuation;
+            }
+            return Color::black();
         }
         let unit_direction = ray.direction.unit_vector();
         let a = 0.5 * (unit_direction[1] + 1.0);
