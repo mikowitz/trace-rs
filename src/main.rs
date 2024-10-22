@@ -33,25 +33,36 @@ fn main() {
             );
 
             if (center - Point3::new(4., 0.2, 0.)).length() > 0.9 {
-                let mat = if choose_mat < 0.8 {
+                if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    Material::Lambertian(albedo)
+                    let mat = Material::Lambertian(albedo);
+                    if rng.gen::<f32>() > 0.5 {
+                        world.push(Sphere::moving(
+                            center,
+                            center + Vec3::new(0., rng.gen_range(0.0..0.5), 0.),
+                            0.2,
+                            mat,
+                        ));
+                    } else {
+                        world.push(Sphere::new(center, 0.2, mat));
+                    }
                 } else if choose_mat < 0.95 {
                     let albedo = Color::random_in(0.5..1.0);
                     let fuzz = rng.gen_range(0.0..0.5);
-                    Material::Metal(albedo, fuzz)
+                    let mat = Material::Metal(albedo, fuzz);
+                    world.push(Sphere::new(center, 0.2, mat));
                 } else {
-                    Material::Dielectric(1.5)
+                    let mat = Material::Dielectric(1.5);
+                    world.push(Sphere::new(center, 0.2, mat));
                 };
-                world.push(Sphere::new(center, 0.2, mat));
             }
         })
         .for_each(drop);
 
     let mut camera = Camera::default();
     camera.aspect_ratio = 16. / 9.;
-    camera.image_width = 1200;
-    camera.samples_per_pixel = 500;
+    camera.image_width = 600;
+    camera.samples_per_pixel = 100;
     camera.max_depth = 50;
 
     camera.vfov = 20.;
