@@ -48,7 +48,6 @@ impl Camera {
             .cartesian_product(0..self.image_width)
             .collect::<Vec<(i32, i32)>>()
             .into_par_iter()
-            // .progress_count(self.image_width as u64 * self.image_height as u64)
             .progress_with_style(style)
             .map(|(y, x)| {
                 let pixel_color = (0..self.samples_per_pixel).fold(Color::black(), |color, _| {
@@ -117,7 +116,7 @@ impl Camera {
             self.defocus_disk_sample()
         };
         let direction = pixel_sample - origin;
-        Ray::new(origin, direction)
+        Ray::new(origin, direction, rng.gen::<f32>())
     }
 
     fn defocus_disk_sample(&self) -> Point3 {

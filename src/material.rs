@@ -16,7 +16,7 @@ pub enum Material {
 impl Material {
     pub fn scatter(&self, ray: &Ray, hit_rec: &HitRecord) -> Option<ScatterRecord> {
         match self {
-            Self::Lambertian(albedo) => lambertian_scatter(hit_rec, *albedo),
+            Self::Lambertian(albedo) => lambertian_scatter(ray, hit_rec, *albedo),
             Self::Metal(albedo, fuzz) => metal_scatter(ray, hit_rec, *albedo, *fuzz),
             Self::Dielectric(refraction_index) => {
                 dielectric_scatter(ray, hit_rec, *refraction_index)
@@ -25,14 +25,14 @@ impl Material {
     }
 }
 
-fn lambertian_scatter(hit_rec: &HitRecord, albedo: Color) -> Option<ScatterRecord> {
+fn lambertian_scatter(ray: &Ray, hit_rec: &HitRecord, albedo: Color) -> Option<ScatterRecord> {
     let mut scatter_direction = hit_rec.normal + Vec3::random_unit_vector();
     if scatter_direction.is_near_zero() {
         scatter_direction = hit_rec.normal;
     }
     Some(ScatterRecord {
         attenuation: albedo,
-        scattered: Ray::new(hit_rec.p, scatter_direction),
+        scattered: Ray::new(hit_rec.p, scatter_direction, ray.time),
     })
 }
 
@@ -44,7 +44,7 @@ fn metal_scatter(
 ) -> Option<ScatterRecord> {
     let mut reflected = ray.direction.reflect(&hit_rec.normal);
     reflected = reflected.unit_vector() + (Vec3::random_unit_vector() * fuzz);
-    let scattered = Ray::new(hit_rec.p, reflected);
+    let scattered = Ray::new(hit_rec.p, reflected, ray.time);
 
     if scattered.direction.dot(&hit_rec.normal) <= 0. {
         return None;
@@ -82,7 +82,7 @@ fn dielectric_scatter(
 
     Some(ScatterRecord {
         attenuation: Color::white(),
-        scattered: Ray::new(hit_rec.p, direction),
+        scattered: Ray::new(hit_rec.p, direction, ray.time),
     })
 }
 
