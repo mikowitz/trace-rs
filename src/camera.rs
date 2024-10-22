@@ -4,9 +4,10 @@ use crate::{
     ray::Ray,
     vec3::{Point3, Vec3},
 };
-use indicatif::ProgressIterator;
+use indicatif::{ParallelProgressIterator, ProgressStyle};
 use itertools::Itertools;
 use rand::*;
+use rayon::prelude::*;
 use std::fs;
 
 #[derive(Clone, Debug)]
@@ -34,18 +35,28 @@ pub struct Camera {
 impl Camera {
     pub fn render<T>(&mut self, world: &T)
     where
-        T: Hittable + 'static,
+        T: Hittable + 'static + Sync,
     {
         self.initialize();
+
+        let style = ProgressStyle::with_template(
+            "[{elapsed_precise}/{eta_precise}] {bar:40.cyan/red} {pos:>8}/{len:8}",
+        )
+        .unwrap();
+
         let pixels = (0..self.image_height)
             .cartesian_product(0..self.image_width)
-            .progress_count(self.image_width as u64 * self.image_height as u64)
+            .collect::<Vec<(i32, i32)>>()
+            .into_par_iter()
+            // .progress_count(self.image_width as u64 * self.image_height as u64)
+            .progress_with_style(style)
             .map(|(y, x)| {
                 let pixel_color = (0..self.samples_per_pixel).fold(Color::black(), |color, _| {
                     color + Camera::ray_color(&self.get_ray(x, y), world, self.max_depth)
                 }) * self.pixel_samples_scale;
                 pixel_color.to_ppm()
             })
+            .collect::<Vec<String>>()
             .join("\n");
 
         fs::write(
