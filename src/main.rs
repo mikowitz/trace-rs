@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use rand::*;
 use trace_rs::{
+    bvh_node::BvhNode,
     camera::Camera,
     color::Color,
     material::Material,
@@ -59,9 +60,11 @@ fn main() {
         })
         .for_each(drop);
 
+    let bvh_world = vec![BvhNode::new(world.clone())];
+
     let mut camera = Camera::default();
     camera.aspect_ratio = 16. / 9.;
-    camera.image_width = 600;
+    camera.image_width = 1200;
     camera.samples_per_pixel = 100;
     camera.max_depth = 50;
 
@@ -73,5 +76,5 @@ fn main() {
     camera.defocus_angle = 0.6;
     camera.focus_dist = 10.;
 
-    camera.render(&world);
+    camera.render(&bvh_world);
 }

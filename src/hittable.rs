@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use crate::{
+    aabb::Aabb,
     material::Material,
     ray::Ray,
     vec3::{Point3, Vec3},
@@ -35,6 +36,8 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, interval: Range<f32>) -> Option<HitRecord>;
+
+    fn bounding_box(&self) -> Aabb;
 }
 
 impl<T> Hittable for Vec<T>
@@ -50,5 +53,12 @@ where
                 acc
             })
             .0
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        let b = self.iter().fold(Aabb::default(), |bbox, hittable| {
+            Aabb::from_boxes(&bbox, &hittable.bounding_box())
+        });
+        b
     }
 }

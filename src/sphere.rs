@@ -1,4 +1,5 @@
 use crate::{
+    aabb::Aabb,
     hittable::{HitRecord, Hittable},
     material::Material,
     ray::Ray,
@@ -11,23 +12,30 @@ pub struct Sphere {
     center: Ray,
     radius: f32,
     material: Material,
+    bbox: Aabb,
 }
 
 impl Sphere {
     pub fn new(center: Point3, radius: f32, material: Material) -> Self {
+        let rvec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(center, Vec3::new(0., 0., 0.), 0.),
             radius,
             material,
+            bbox: Aabb::from_extrema(center - rvec, center + rvec),
         }
     }
 
     pub fn moving(center1: Point3, center2: Point3, radius: f32, material: Material) -> Self {
         let center = Ray::new(center1, center2 - center1, 0.);
+        let rvec = Vec3::new(radius, radius, radius);
+        let box0 = Aabb::from_extrema(center.at(0.) - rvec, center.at(0.) + rvec);
+        let box1 = Aabb::from_extrema(center.at(1.) - rvec, center.at(1.) + rvec);
         Self {
             center,
             radius,
             material,
+            bbox: Aabb::from_boxes(&box0, &box1),
         }
     }
 }
@@ -61,5 +69,9 @@ impl Hittable for Sphere {
         let normal = (p - current_center) / self.radius;
 
         Some(HitRecord::new(p, t, &normal, ray, self.material))
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox.clone()
     }
 }
