@@ -72,7 +72,7 @@ fn main() {
     let mut camera = Camera::default();
     camera.aspect_ratio = 16. / 9.;
     camera.image_width = 600;
-    camera.samples_per_pixel = 100;
+    camera.samples_per_pixel = 500;
     camera.max_depth = 10;
 
     camera.vfov = 20.;

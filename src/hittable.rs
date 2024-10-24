@@ -66,6 +66,15 @@ where
     }
 }
 
+impl<T> Default for HittableList<T>
+where
+    T: Hittable + 'static + Clone,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Hittable for HittableList<T>
 where
     T: Hittable + 'static,
