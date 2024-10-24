@@ -40,7 +40,7 @@ impl Camera {
         self.initialize();
 
         let style = ProgressStyle::with_template(
-            "[{elapsed_precise}/{eta_precise}] {bar:40.cyan/red} {pos:>8}/{len:8}",
+            "[{elapsed_precise}/{duration_precise}] {bar:40.cyan/red} {pos:>8}/{len:8}",
         )
         .unwrap();
 

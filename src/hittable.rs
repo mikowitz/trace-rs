@@ -62,3 +62,50 @@ where
         b
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct HittableList<T>
+where
+    T: Hittable + 'static,
+{
+    pub objects: Vec<T>,
+    bbox: Aabb,
+}
+
+impl<T> HittableList<T>
+where
+    T: Hittable + 'static + Clone,
+{
+    pub fn new() -> Self {
+        Self {
+            objects: vec![],
+            bbox: Aabb::default(),
+        }
+    }
+
+    pub fn add(&mut self, object: T) {
+        self.objects.push(object.clone());
+        self.bbox = Aabb::from_boxes(&self.bbox, &object.bounding_box())
+    }
+}
+
+impl<T> Hittable for HittableList<T>
+where
+    T: Hittable + 'static,
+{
+    fn hit(&self, ray: &Ray, interval: Range<f32>) -> Option<HitRecord> {
+        self.objects
+            .iter()
+            .fold((None, interval.end), |acc, hittable| {
+                if let Some(rec) = hittable.hit(ray, interval.start..acc.1) {
+                    return (Some(rec), rec.t);
+                }
+                acc
+            })
+            .0
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox.clone()
+    }
+}

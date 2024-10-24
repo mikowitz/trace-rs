@@ -1,6 +1,6 @@
 use crate::{
     aabb::Aabb,
-    hittable::{HitRecord, Hittable},
+    hittable::{HitRecord, Hittable, HittableList},
     ray::Ray,
 };
 use std::ops::Range;
@@ -12,29 +12,32 @@ pub struct BvhNode {
 }
 
 impl BvhNode {
-    pub fn new<T>(mut objects: Vec<T>) -> Self
+    pub fn new<T>(mut objects: HittableList<T>) -> Self
     where
         T: Hittable + Clone + 'static + Sync,
     {
-        if objects.len() == 1 {
-            let left: T = objects[0].clone();
-            let right: T = objects[0].clone();
-            let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
-            return Self {
-                left: Box::new(left),
-                right: Box::new(right),
-                bbox,
-            };
-        } else if objects.len() == 2 {
-            let left: T = objects[0].clone();
-            let right: T = objects[1].clone();
-            let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
-            return Self {
-                left: Box::new(left),
-                right: Box::new(right),
-                bbox,
-            };
-        }
+        println!("{}", objects.objects.len());
+        let mut left = HittableList::<T>::new();
+        let mut right = HittableList::<T>::new();
+        // if objects.objects.len() == 1 {
+        //     left.add(objects.objects[0].clone());
+        //     right.add(objects.objects[0].clone());
+        //     let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
+        //     return Self {
+        //         left: Box::new(left),
+        //         right: Box::new(right),
+        //         bbox,
+        //     };
+        // } else if objects.objects.len() == 2 {
+        //     left.add(objects.objects[0].clone());
+        //     right.add(objects.objects[1].clone());
+        //     let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
+        //     return Self {
+        //         left: Box::new(left),
+        //         right: Box::new(right),
+        //         bbox,
+        //     };
+        // }
 
         let b = objects.bounding_box();
         let xr = b.axis_interval(0);
@@ -55,18 +58,30 @@ impl BvhNode {
         } else {
             2
         };
-        let mid = objects.len() / 2;
-        objects.sort_by(|a, b| {
+        let mid = objects.objects.len() / 2;
+        objects.objects.sort_by(|a, b| {
             (a.bounding_box().axis_interval(index).start)
                 .total_cmp(&b.bounding_box().axis_interval(index).start)
         });
-        let left: Vec<T> = objects[..mid].to_vec();
-        let right: Vec<T> = objects[mid..].to_vec();
+        for o in &objects.objects[..mid] {
+            left.add(o.clone());
+        }
+        for o in &objects.objects[mid..] {
+            right.add(o.clone());
+        }
         let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
-        Self {
-            left: Box::new(left),
-            right: Box::new(right),
-            bbox,
+        if mid >= 8 {
+            Self {
+                left: Box::new(Self::new(left)),
+                right: Box::new(Self::new(right)),
+                bbox,
+            }
+        } else {
+            Self {
+                left: Box::new(left),
+                right: Box::new(right),
+                bbox,
+            }
         }
     }
 }
