@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use crate::{
+    aabb::Aabb,
     material::Material,
     ray::Ray,
     vec3::{Point3, Vec3},
@@ -35,14 +36,52 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, interval: Range<f32>) -> Option<HitRecord>;
+
+    fn bounding_box(&self) -> Aabb;
 }
 
-impl<T> Hittable for Vec<T>
+#[derive(Clone, Debug)]
+pub struct HittableList<T>
+where
+    T: Hittable + 'static,
+{
+    pub objects: Vec<T>,
+    bbox: Aabb,
+}
+
+impl<T> HittableList<T>
+where
+    T: Hittable + 'static + Clone,
+{
+    pub fn new() -> Self {
+        Self {
+            objects: vec![],
+            bbox: Aabb::default(),
+        }
+    }
+
+    pub fn add(&mut self, object: T) {
+        self.objects.push(object.clone());
+        self.bbox = Aabb::from_boxes(&self.bbox, &object.bounding_box())
+    }
+}
+
+impl<T> Default for HittableList<T>
+where
+    T: Hittable + 'static + Clone,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> Hittable for HittableList<T>
 where
     T: Hittable + 'static,
 {
     fn hit(&self, ray: &Ray, interval: Range<f32>) -> Option<HitRecord> {
-        self.iter()
+        self.objects
+            .iter()
             .fold((None, interval.end), |acc, hittable| {
                 if let Some(rec) = hittable.hit(ray, interval.start..acc.1) {
                     return (Some(rec), rec.t);
@@ -50,5 +89,9 @@ where
                 acc
             })
             .0
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox.clone()
     }
 }
