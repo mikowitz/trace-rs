@@ -40,29 +40,6 @@ pub trait Hittable {
     fn bounding_box(&self) -> Aabb;
 }
 
-impl<T> Hittable for Vec<T>
-where
-    T: Hittable + 'static,
-{
-    fn hit(&self, ray: &Ray, interval: Range<f32>) -> Option<HitRecord> {
-        self.iter()
-            .fold((None, interval.end), |acc, hittable| {
-                if let Some(rec) = hittable.hit(ray, interval.start..acc.1) {
-                    return (Some(rec), rec.t);
-                }
-                acc
-            })
-            .0
-    }
-
-    fn bounding_box(&self) -> Aabb {
-        let b = self.iter().fold(Aabb::default(), |bbox, hittable| {
-            Aabb::from_boxes(&bbox, &hittable.bounding_box())
-        });
-        b
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct HittableList<T>
 where

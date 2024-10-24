@@ -16,29 +16,6 @@ impl BvhNode {
     where
         T: Hittable + Clone + 'static + Sync,
     {
-        println!("{}", objects.objects.len());
-        let mut left = HittableList::<T>::new();
-        let mut right = HittableList::<T>::new();
-        // if objects.objects.len() == 1 {
-        //     left.add(objects.objects[0].clone());
-        //     right.add(objects.objects[0].clone());
-        //     let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
-        //     return Self {
-        //         left: Box::new(left),
-        //         right: Box::new(right),
-        //         bbox,
-        //     };
-        // } else if objects.objects.len() == 2 {
-        //     left.add(objects.objects[0].clone());
-        //     right.add(objects.objects[1].clone());
-        //     let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
-        //     return Self {
-        //         left: Box::new(left),
-        //         right: Box::new(right),
-        //         bbox,
-        //     };
-        // }
-
         let b = objects.bounding_box();
         let xr = b.axis_interval(0);
         let yr = b.axis_interval(1);
@@ -58,6 +35,9 @@ impl BvhNode {
         } else {
             2
         };
+        let mut left = HittableList::<T>::new();
+        let mut right = HittableList::<T>::new();
+
         let mid = objects.objects.len() / 2;
         objects.objects.sort_by(|a, b| {
             (a.bounding_box().axis_interval(index).start)
@@ -70,7 +50,7 @@ impl BvhNode {
             right.add(o.clone());
         }
         let bbox = Aabb::from_boxes(&left.bounding_box(), &right.bounding_box());
-        if mid >= 8 {
+        if mid >= 16 {
             Self {
                 left: Box::new(Self::new(left)),
                 right: Box::new(Self::new(right)),

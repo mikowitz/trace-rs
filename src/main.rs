@@ -11,6 +11,11 @@ use trace_rs::{
 };
 
 fn main() {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(8)
+        .build_global()
+        .unwrap();
+
     let ground_material = Material::Lambertian(Color::new(0.5, 0.5, 0.5));
     let mat1 = Material::Dielectric(1.5);
     let mat2 = Material::Lambertian(Color::new(0.4, 0.2, 0.1));
@@ -66,7 +71,7 @@ fn main() {
 
     let mut camera = Camera::default();
     camera.aspect_ratio = 16. / 9.;
-    camera.image_width = 1200;
+    camera.image_width = 600;
     camera.samples_per_pixel = 100;
     camera.max_depth = 10;
 
