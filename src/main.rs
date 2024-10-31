@@ -25,7 +25,7 @@ fn main() {
     let pixel_delta_v = viewport_v / image_height as f32;
 
     let viewport_upper_left =
-        camera_center - Vec3::Z * focal_length - viewport_u / 2. - viewport_v - 2.;
+        camera_center - Vec3::Z * focal_length - viewport_u / 2. - viewport_v / 2.;
 
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
