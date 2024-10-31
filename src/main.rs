@@ -4,6 +4,9 @@ use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
 use rayon::prelude::*;
 
+use glam::Vec3;
+use trace_rs::color;
+
 fn main() {
     let image_width = 256;
     let image_height = 256;
@@ -14,15 +17,13 @@ fn main() {
         .into_par_iter()
         .progress_count(image_width as u64 * image_height as u64)
         .map(|(y, x)| {
-            let r = 0.0;
-            let g = y as f32 / (image_height - 1) as f32;
-            let b = x as f32 / (image_width - 1) as f32;
+            let c = Vec3::new(
+                0.0,
+                y as f32 / (image_height - 1) as f32,
+                x as f32 / (image_width - 1) as f32,
+            );
 
-            let ir = (255.999 * r) as i32;
-            let ig = (255.999 * g) as i32;
-            let ib = (255.999 * b) as i32;
-
-            format!("{ir} {ig} {ib}")
+            color::to_ppm(c)
         })
         .collect::<Vec<String>>()
         .join("\n");
