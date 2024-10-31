@@ -2,6 +2,7 @@ use crate::{color, hittable::Hittable, ray::Ray};
 use glam::Vec3;
 use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
+use rand::Rng;
 use rayon::prelude::*;
 use std::fs;
 
@@ -9,12 +10,14 @@ use std::fs;
 pub struct Camera {
     pub aspect_ratio: f32,
     pub image_width: u32,
+    pub samples_per_pixel: usize,
 
     image_height: u32,
     center: Vec3,
     pixel00_loc: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    pixel_samples_scale: f32,
 }
 
 impl Camera {
@@ -34,15 +37,12 @@ impl Camera {
             .into_par_iter()
             .progress_count(self.image_width as u64 * self.image_height as u64)
             .map(|(y, x)| {
-                let pixel_center = self.pixel00_loc
-                    + (x as f32 * self.pixel_delta_u)
-                    + (y as f32 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray {
-                    origin: self.center,
-                    direction: ray_direction,
-                };
-                let pixel_color = ray.color(world);
+                let mut pixel_color = Vec3::ZERO;
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(x, y);
+                    pixel_color += ray.color(world);
+                }
+                pixel_color *= self.pixel_samples_scale;
                 color::to_ppm(pixel_color)
             })
             .collect::<Vec<String>>()
@@ -58,10 +58,27 @@ impl Camera {
         .unwrap();
     }
 
+    fn get_ray(&self, x: u32, y: u32) -> Ray {
+        let mut rng = rand::thread_rng();
+        let x_offset = rng.gen::<f32>();
+        let y_offset = rng.gen::<f32>();
+
+        let pixel_sample = self.pixel00_loc
+            + (x as f32 + x_offset) * self.pixel_delta_u
+            + (y as f32 + y_offset) * self.pixel_delta_v;
+
+        let origin = self.center;
+        let direction = pixel_sample - origin;
+
+        Ray { origin, direction }
+    }
+
     fn initialize(&mut self) {
         self.image_height = ((self.image_width as f32 / self.aspect_ratio) as u32).max(1);
 
         self.center = Vec3::ZERO;
+
+        self.pixel_samples_scale = (self.samples_per_pixel as f32).recip();
 
         let focal_length = 1.;
         let viewport_height = 2.;

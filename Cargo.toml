@@ -7,4 +7,5 @@ edition = "2021"
 glam = "0.29.1"
 indicatif = { version = "0.17.8", features = ["rayon"] }
 itertools = "0.13.0"
+rand = "0.8.5"
 rayon = "1.10.0"
