@@ -1,13 +1,21 @@
-use std::fs;
-
+use glam::Vec3;
 use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
 use rayon::prelude::*;
-
-use glam::Vec3;
-use trace_rs::{color, ray::Ray};
+use std::fs;
+use trace_rs::{color, hittable_list::HittableList, ray::Ray, sphere::Sphere};
 
 fn main() {
+    let mut world: HittableList<Sphere> = HittableList::new();
+    world.add(Sphere {
+        center: -Vec3::Z,
+        radius: 0.5,
+    });
+    world.add(Sphere {
+        center: Vec3::new(0., -100.5, -1.),
+        radius: 100.,
+    });
+
     let aspect_ratio = 16. / 9.;
     let image_width = 400;
 
@@ -42,7 +50,7 @@ fn main() {
                 origin: camera_center,
                 direction: ray_direction,
             };
-            let pixel_color = ray.color();
+            let pixel_color = ray.color(&world);
             color::to_ppm(pixel_color)
         })
         .collect::<Vec<String>>()
