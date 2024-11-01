@@ -1,4 +1,4 @@
-use crate::{hittable::Hittable, vector};
+use crate::hittable::Hittable;
 use glam::Vec3;
 
 pub struct Ray {
@@ -20,12 +20,10 @@ impl Ray {
         }
 
         if let Some(hit_rec) = world.hit(self, 0.001..f32::INFINITY) {
-            let direction = hit_rec.normal + vector::random_unit_vector();
-            let r = Self {
-                origin: hit_rec.p,
-                direction,
-            };
-            return 0.5 * r.color(world, depth - 1);
+            if let Some(mat) = hit_rec.material.scatter(self, &hit_rec) {
+                return mat.attenuation * mat.scattered.color(world, depth - 1);
+            }
+            return Vec3::ZERO;
         }
 
         let unit_direction = self.direction.normalize();
