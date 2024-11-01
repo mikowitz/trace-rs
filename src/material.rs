@@ -26,6 +26,7 @@ impl Material {
                 let scattered = Ray {
                     origin: hit_rec.p,
                     direction: scatter_direction,
+                    time: ray.time,
                 };
                 Some(ScatterRecord {
                     attenuation: *albedo,
@@ -38,6 +39,7 @@ impl Material {
                 let scattered = Ray {
                     origin: hit_rec.p,
                     direction: reflected,
+                    time: ray.time,
                 };
                 if scattered.direction.dot(hit_rec.normal) > 0. {
                     Some(ScatterRecord {
@@ -70,6 +72,7 @@ impl Material {
                 let scattered = Ray {
                     origin: hit_rec.p,
                     direction,
+                    time: ray.time,
                 };
 
                 Some(ScatterRecord {

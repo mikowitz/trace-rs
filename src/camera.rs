@@ -84,8 +84,13 @@ impl Camera {
             self.defocus_disk_sample()
         };
         let direction = pixel_sample - origin;
+        let time = rng.gen::<f32>();
 
-        Ray { origin, direction }
+        Ray {
+            origin,
+            direction,
+            time,
+        }
     }
 
     fn initialize(&mut self) {

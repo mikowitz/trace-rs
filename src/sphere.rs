@@ -8,7 +8,7 @@ use std::ops::Range;
 
 #[derive(Clone, Debug)]
 pub struct Sphere {
-    pub center: Vec3,
+    pub center: Ray,
     pub radius: f32,
     pub material: Material,
 }
@@ -16,7 +16,23 @@ pub struct Sphere {
 impl Sphere {
     pub fn new(center: Vec3, radius: f32, material: Material) -> Self {
         Self {
-            center,
+            center: Ray {
+                origin: center,
+                direction: Vec3::ZERO,
+                time: 0.,
+            },
+            radius,
+            material,
+        }
+    }
+
+    pub fn moving(center1: Vec3, center2: Vec3, radius: f32, material: Material) -> Self {
+        Self {
+            center: Ray {
+                origin: center1,
+                direction: center2 - center1,
+                time: 0.,
+            },
             radius,
             material,
         }
@@ -25,7 +41,8 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, interval: Range<f32>) -> Option<HitRecord> {
-        let oc = self.center - ray.origin;
+        let current_center = self.center.at(ray.time);
+        let oc = current_center - ray.origin;
         let a = ray.direction.length_squared();
         let h = ray.direction.dot(oc);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -47,7 +64,7 @@ impl Hittable for Sphere {
 
         let t = root;
         let p = ray.at(t);
-        let normal = (p - self.center) / self.radius;
+        let normal = (p - current_center) / self.radius;
 
         Some(HitRecord::with_front_face(
             p,
