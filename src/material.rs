@@ -1,6 +1,6 @@
-use glam::Vec3;
-
 use crate::{hittable::HitRecord, ray::Ray, vector::random_unit_vector};
+use glam::Vec3;
+use rand::Rng;
 
 pub struct ScatterRecord {
     pub attenuation: Vec3,
@@ -11,6 +11,7 @@ pub struct ScatterRecord {
 pub enum Material {
     Lambertian(Vec3),
     Metal(Vec3, f32),
+    Dieletric(f32),
 }
 
 impl Material {
@@ -47,6 +48,41 @@ impl Material {
                     None
                 }
             }
+            Self::Dieletric(refraction_index) => {
+                let ri = if hit_rec.front_face {
+                    1. / refraction_index
+                } else {
+                    *refraction_index
+                };
+
+                let unit_direction = ray.direction.normalize();
+                let cos_theta = -unit_direction.dot(hit_rec.normal).min(1.);
+                let sin_theta = (1. - cos_theta * cos_theta).sqrt();
+
+                let mut rng = rand::thread_rng();
+                let direction =
+                    if ri * sin_theta > 1. || reflectance(cos_theta, ri) > rng.gen::<f32>() {
+                        unit_direction.reflect(hit_rec.normal)
+                    } else {
+                        unit_direction.refract(hit_rec.normal, ri)
+                    };
+
+                let scattered = Ray {
+                    origin: hit_rec.p,
+                    direction,
+                };
+
+                Some(ScatterRecord {
+                    attenuation: Vec3::ONE,
+                    scattered,
+                })
+            }
         }
     }
+}
+
+fn reflectance(cosine: f32, refraction_index: f32) -> f32 {
+    let mut r0 = (1. - refraction_index) / (1. + refraction_index);
+    r0 *= r0;
+    r0 + (1. - r0) * (1. - cosine).powi(5)
 }
