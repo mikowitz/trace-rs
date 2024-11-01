@@ -11,6 +11,7 @@ pub struct Camera {
     pub aspect_ratio: f32,
     pub image_width: u32,
     pub samples_per_pixel: usize,
+    pub max_depth: usize,
 
     image_height: u32,
     center: Vec3,
@@ -40,7 +41,7 @@ impl Camera {
                 let mut pixel_color = Vec3::ZERO;
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    pixel_color += ray.color(world);
+                    pixel_color += ray.color(world, self.max_depth);
                 }
                 pixel_color *= self.pixel_samples_scale;
                 color::to_ppm(pixel_color)
