@@ -1,4 +1,4 @@
-use crate::{color, hittable::Hittable, ray::Ray};
+use crate::{color, hittable::Hittable, ray::Ray, vector::random_in_unit_disk};
 use glam::Vec3;
 use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
@@ -18,12 +18,17 @@ pub struct Camera {
     pub lookat: Vec3,
     pub vup: Vec3,
 
+    pub defocus_angle: f32,
+    pub focus_dist: f32,
+
     image_height: u32,
     center: Vec3,
     pixel00_loc: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     pixel_samples_scale: f32,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Camera {
@@ -73,7 +78,11 @@ impl Camera {
             + (x as f32 + x_offset) * self.pixel_delta_u
             + (y as f32 + y_offset) * self.pixel_delta_v;
 
-        let origin = self.center;
+        let origin = if self.defocus_angle <= 0. {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
         let direction = pixel_sample - origin;
 
         Ray { origin, direction }
@@ -86,10 +95,9 @@ impl Camera {
 
         self.pixel_samples_scale = (self.samples_per_pixel as f32).recip();
 
-        let focal_length = (self.lookfrom - self.lookat).length();
         let theta = self.vfov.to_radians();
         let h = (theta / 2.).tan();
-        let viewport_height = 2. * h * focal_length;
+        let viewport_height = 2. * h * self.focus_dist;
         let viewport_width = viewport_height * (self.image_width as f32 / self.image_height as f32);
 
         let w = (self.lookfrom - self.lookat).normalize();
@@ -103,8 +111,18 @@ impl Camera {
         self.pixel_delta_v = viewport_v / self.image_height as f32;
 
         let viewport_upper_left =
-            self.center - w * focal_length - viewport_u / 2. - viewport_v / 2.;
+            self.center - w * self.focus_dist - viewport_u / 2. - viewport_v / 2.;
 
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
+
+        let defocus_radius = self.focus_dist * (self.defocus_angle / 2.).to_radians().tan();
+
+        self.defocus_disk_u = u * defocus_radius;
+        self.defocus_disk_v = v * defocus_radius;
+    }
+
+    fn defocus_disk_sample(&self) -> Vec3 {
+        let p = random_in_unit_disk();
+        self.center + p.x * self.defocus_disk_u + p.y * self.defocus_disk_v
     }
 }
