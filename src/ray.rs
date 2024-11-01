@@ -1,4 +1,4 @@
-use crate::hittable::Hittable;
+use crate::{hittable::Hittable, vector};
 use glam::Vec3;
 
 pub struct Ray {
@@ -11,12 +11,21 @@ impl Ray {
         self.origin + time * self.direction
     }
 
-    pub fn color<T>(&self, world: &T) -> Vec3
+    pub fn color<T>(&self, world: &T, depth: usize) -> Vec3
     where
         T: Hittable + 'static + Sync,
     {
-        if let Some(hit_rec) = world.hit(self, 0.0..f32::INFINITY) {
-            return 0.5 * (hit_rec.normal + Vec3::ONE);
+        if depth == 0 {
+            return Vec3::ZERO;
+        }
+
+        if let Some(hit_rec) = world.hit(self, 0.001..f32::INFINITY) {
+            let direction = hit_rec.normal + vector::random_unit_vector();
+            let r = Self {
+                origin: hit_rec.p,
+                direction,
+            };
+            return 0.5 * r.color(world, depth - 1);
         }
 
         let unit_direction = self.direction.normalize();
