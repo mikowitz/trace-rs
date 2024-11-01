@@ -40,5 +40,10 @@ fn main() {
     cam.samples_per_pixel = 100;
     cam.max_depth = 10;
 
+    cam.vfov = 20.;
+    cam.lookfrom = Vec3::new(-2., 2., 1.);
+    cam.lookat = Vec3::NEG_Z;
+    cam.vup = Vec3::Y;
+
     cam.render(&world);
 }
