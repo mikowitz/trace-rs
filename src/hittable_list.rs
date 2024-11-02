@@ -1,4 +1,5 @@
 use crate::{
+    aabb::Aabb,
     hittable::{HitRecord, Hittable},
     ray::Ray,
 };
@@ -10,6 +11,7 @@ where
     T: Hittable + 'static,
 {
     pub objects: Vec<T>,
+    bbox: Aabb,
 }
 
 impl<T> HittableList<T>
@@ -17,11 +19,15 @@ where
     T: Hittable + 'static + Clone,
 {
     pub fn new() -> Self {
-        Self { objects: vec![] }
+        Self {
+            objects: vec![],
+            bbox: Aabb::default(),
+        }
     }
 
     pub fn add(&mut self, object: T) {
-        self.objects.push(object);
+        self.objects.push(object.clone());
+        self.bbox = Aabb::from_boxes(self.bbox.clone(), object.bounding_box());
     }
 }
 
@@ -40,6 +46,10 @@ where
                 }
             })
             .0
+    }
+
+    fn bounding_box(&self) -> &Aabb {
+        &self.bbox
     }
 }
 
